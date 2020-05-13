@@ -1,10 +1,11 @@
 import React, {Component} from "react";
 import {getMovies} from "./fakeMovieService";
 import {getGenres} from "./fakeGenreService";
-import Like from "./components/common/like"
 import Pagination from "./components/common/page"
-import ListGroupe from "./components/common/genre"
-import { paginate, generate } from './utils/paginate'
+import ListGroupe from "./components/common/listGroup"
+import { paginate } from './utils/paginate'
+import MoviesTable from './components/moviesTable'
+import _ from 'lodash'
 
 class Movies extends Component {
     state = {
@@ -14,10 +15,13 @@ class Movies extends Component {
         currentPage: 1,
         genres: [],
         selectedGenre: "All Genres",
+        sortColumn: { path: 'title', order: 'asc' },
         }
 
     componentDidMount() {
-        this.setState({ movies: getMovies(), genres: getGenres()});
+        const genres = [{ _id: "", name: 'All Genres'}, ...getGenres()];
+
+        this.setState({ movies: getMovies(), genres: genres});
     }
 
     //binding
@@ -45,82 +49,63 @@ class Movies extends Component {
     }
 
     handleSelectGenre = (genre) => {
-        this.setState( {selectedGenre: genre});
+        this.setState( {selectedGenre: genre, currentPage: 1});
         console.log("Select Item", genre);
+    }
+
+    handleSort = sortColumn => {  
+       this.setState({ sortColumn });
+    }
+
+    getPageData = () => {
+        const { pageSize, currentPage, selectedGenre, sortColumn, movies: allMovies } = this.state;
+
+        let filtered = selectedGenre && selectedGenre._id ? allMovies.filter( m => m.genre._id === selectedGenre._id) 
+        : allMovies ;
+
+        const sorted = _.orderBy( filtered, [sortColumn.path], [sortColumn.order])
+        
+        const movies = paginate( sorted, currentPage, pageSize);
+
+        return { totalCount: filtered.length, data: movies};
     }
 
     // 23
     render () {
 
-        const { length: count } = this.state.movies;
-        const { pageSize, currentPage, movies: allMovies, genres, selectedGenre } = this.state;
-        let moviesByGenre = allMovies;
-        let moviesFilter = [];
-                
-        console.log(this.state.heartState);
+        //const { length: count } = this.state.movies;
+        const { pageSize, currentPage, sortColumn } = this.state;
+        //console.log(this.state.heartState);
 
         if( this.state.movies.length === 0) return <p>Nothing left in the List</p>;
 
-      
- /*       if( selectedGenre !== "All Genres"){
-            moviesByGenre = generate( allMovies, selectedGenre);
-            console.log('Genre Movies selection', moviesByGenre);
-            moviesFilter = paginate(moviesByGenre, currentPage, pageSize);
-        } 
-        else */
-         moviesFilter = paginate(allMovies, currentPage, pageSize);
-        
-        
+        const { totalCount, data: movies } = this.getPageData();
+
         return (
             <React.Fragment>
                 <div className='row'>
                     <div className="col-2">
                         <ListGroupe onSelectItem = {this.handleSelectGenre}
-                        genres={genres}
-                        items={genres}
+                        genres={this.state.genres}
+                        items={this.state.genres}
                         selectedItem={this.state.selectedGenre}/>
                     </div>
-                
-                <div className='col'>
-                <p> Showing {count} movies in the database</p>
-                <table className="table">
-                <thead>
-                    <tr>
-                    <th scope="col">Title</th>
-                    <th scope="col">Genre</th>
-                    <th scope="col">Number of Bla</th>
-                    <th scope="col">Rate</th>
-                    <th scope="col">Like</th>
-                    <th scope="col">Delete Button</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {moviesFilter.map(movie => (
-                        <tr key={movie._id}>
-                            <th  scope="row"> {movie.title}</th>
-                            <td>{movie.genre.name}</td>
-                            <td>{movie.numberInStock}</td>
-                            <td>{movie.dailyRentalRate}</td>
-                            <td> <Like liked={movie.liked} 
-                            onLikeToggle={ () => this.handleLikedClick(movie)} /> 
-                            </td>      
-                            <td> <button onClick={() => this.handleDelete(movie)}
-                                    className="btn btn-danger btn-sm">Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))
-                } 
-                </tbody>
-                </table>
-                <nav aria-label="Page navigation example">
-                    <Pagination selection={this.state.selectedPage}
-                     onPageChange={this.handlePage}
-                     itemsCount={ count }
-                     pageSize={this.state.pageSize}
-                     currentPage={this.state.currentPage} />
-                </nav>
-                </div>
+                    <div className='col'>
+                    <p> Showing {totalCount} movies in the database</p>
+                    <MoviesTable 
+                    movies={movies} 
+                    sortColumn={sortColumn}
+                    onLikeToggle={this.handleLikedClick} 
+                    onDelete={this.handleDelete}
+                    onSort={this.handleSort} />
+                    <nav aria-label="Page navigation example">
+                        <Pagination selection={this.state.selectedPage}
+                        onPageChange={this.handlePage}
+                        itemsCount={ totalCount }
+                        pageSize={this.state.pageSize}
+                        currentPage={this.state.currentPage} />
+                    </nav>
+                    </div>
                 </div>
             </React.Fragment>
         )    

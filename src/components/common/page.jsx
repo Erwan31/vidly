@@ -14,7 +14,7 @@ class Pagination extends Component {
         if(pagesCount===1) return null;
         const pages = _.range(1, pagesCount + 1 );
 
-        let classPages = "page-item";
+        //let classPages = "page-item";
 
         return (
             <ul className="pagination">
