@@ -74,7 +74,7 @@ class Movies extends Component {
     render () {
 
         //const { length: count } = this.state.movies;
-        const { pageSize, currentPage, sortColumn } = this.state;
+        const { sortColumn } = this.state;
         //console.log(this.state.heartState);
 
         if( this.state.movies.length === 0) return <p>Nothing left in the List</p>;

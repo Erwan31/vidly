@@ -1,10 +1,8 @@
-import React, { Component } from 'react';
-import Like from "./like"
+import React from 'react';
 import TableHeader from './tableHeader'
 import TableBody from './tableBody'
 
-const Table = (props) => {
-    const { columns, sortColumn, onSort, data} = props;
+const Table = ( { columns, sortColumn, onSort, data} ) => {
 
     return (  
         <table className="table">
