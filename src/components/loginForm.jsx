@@ -1,5 +1,4 @@
 import React from 'react';
-import Input from './common/input';
 import Joi from 'joi-browser'
 import Form from './common/form';
 
@@ -24,10 +23,6 @@ class LoginForm extends Form {
  /*   componentDidMount() {
         //this.username.current.focus();
     } */
-
-
-
-    
 
     doSubmit = () => {
         // call the server
