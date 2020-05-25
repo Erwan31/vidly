@@ -9,6 +9,10 @@ import LoginForm from "./components/loginForm";
 import RegisterForm from "./components/registerForm";
 import "./App.css";
 import Movies from './movies';
+import * as Sentry from '@sentry/browser';
+
+
+Sentry.init({dsn: "https://16ca53fd7652423ab340e2b785da6b26@o396319.ingest.sentry.io/5250809"});
 
 class App extends Component {
   render() {

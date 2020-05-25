@@ -1,6 +1,5 @@
 import React, {Component} from "react";
-import {getMovies} from "./fakeMovieService";
-import {getGenres} from "./fakeGenreService";
+import {getMovies, deleteMovie } from "./Services/MovieService";
 import Pagination from "./components/common/page"
 import ListGroupe from "./components/common/listGroup"
 import { paginate } from './utils/paginate'
@@ -8,6 +7,9 @@ import MoviesTable from './components/moviesTable'
 import _ from 'lodash'
 import { Link } from 'react-router-dom';
 import SearchBox from './components/common/searchBox';
+//import http from './httpService';
+//import config from './config.json';
+import { getGenres } from './Services/GenreService';
 
 class Movies extends Component {
     state = {
@@ -20,19 +22,35 @@ class Movies extends Component {
         sortColumn: { path: "title", order: "asc" }
       };
 
-    componentDidMount() {
-        const genres = [{ _id: "", name: 'All Genres'}, ...getGenres()];
+     async componentDidMount() {
+         const { data } = await getGenres();
+        // pending
+        //const { data: genres } = await http.get(config.apiEndPoint);
+        const genres = [{ _id: "", name: "All Genres" }, ...data ];
+        //console.log(genres);
 
-        this.setState({ movies: getMovies(), genres: genres});
+        const { data: movies } = await getMovies();
+
+        this.setState({ movies: movies, genres: genres });
     }
 
     //binding
-    handleDelete = movie => {
-      //let id = this.movie._id;
-      let index = this.state.movies.indexOf(movie);
-      let moviesMod =  this.state.movies.filter( m => m._id !== movie._id);
-      console.log('clicked', index, moviesMod);
-        this.setState({ movies: moviesMod});
+    handleDelete = async (movie) => {
+
+      const originalMovies = this.state.movies;
+      const movies = originalMovies.filter( m => m._id !== movie._id);
+
+      this.setState({ movies });
+
+      try{
+          await deleteMovie(movie._id);
+       }
+       catch (ex) {
+            if( ex.response && ex.response.status === 404){
+                console.error("404");
+            }
+        }
+      
     };
 
     handleLikedClick = (movie) => {   
@@ -52,7 +70,7 @@ class Movies extends Component {
 
     handleSelectGenre = (genre) => {
         this.setState( {selectedGenre: genre, currentPage: 1});
-        console.log("Select Item", genre);
+        //console.log("Select Item", genre);
     }
 
     handleSort = sortColumn => {  
@@ -71,12 +89,14 @@ class Movies extends Component {
             filtered = allMovies.filter( m => m.title.toLowerCase().startsWith(searchQuery.toLowerCase()) );
         }
         else if(selectedGenre && selectedGenre._id){ 
-            allMovies.filter( m => m.genre._id === selectedGenre._id);
+            //console.log("Selected genre ", selectedGenre);
+            filtered = allMovies.filter( m => m.genre._id === selectedGenre._id);
         }
 
         const sorted = _.orderBy( filtered, [sortColumn.path], [sortColumn.order])
         
         const movies = paginate( sorted, currentPage, pageSize);
+        //console.log("Sorted movies ", movies);
 
         return { totalCount: filtered.length, data: movies};
     }
